@@ -1,53 +1,72 @@
 package network;
 
+import game.Game;
+import game.Player;
+
 import java.net.*;
 import java.io.*;
 import java.util.*;
+
 public class Server {
 
+    ArrayList<ClientHandler> clients = new ArrayList<ClientHandler>();
     private ServerSocket serverSocket;
+    private Game game = new Game();
+    private Thread checkConnection;
+    private boolean playing = false;
+    Scanner sc = new Scanner(System.in);
 
-    private ArrayList<ClientHandler> conections = new ArrayList<ClientHandler>();
-    private int MAX_PLAYERS = 6;
-
-    public Server() {
-
-    }
-
+    //starts the server
     public void start(int port) throws IOException {
-
-        /*
-        * finds the public ip address
-        * copied from: https://www.baeldung.com/java-get-ip-address
-         */
-        String ip;
-
-        URL url = new URL("http://checkip.amazonaws.com/");
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(url.openStream()))) {
-            ip = br.readLine();
-        }
-
         serverSocket = new ServerSocket(port);
-        /*
-        * m
-         */
-        while (true) {
 
-            ClientHandler ch = new ClientHandler(serverSocket.accept());
+        checkConnection = new Thread(() -> {while(true) {
+            try {
+                ClientHandler ch = new ClientHandler(serverSocket.accept());
+                    ch.start();
+                    clients.add(ch);
+                    Player newPlayer = new Player(ch);
+                    while (true) {
+                        if (newPlayer.getName().equals("name")) {
+                            newPlayer = new Player(ch);
+                        } else {
+                            break;
+                        }
+                    }
+                    game.addPlayer(newPlayer);
 
-            if(this.conections.size() < this.MAX_PLAYERS) {
-                System.out.println("player has conected");
-                this.conections.add(ch);
+                    System.out.println(newPlayer.getName() + " has joined");
 
-                ch.start();
-            } else {
-                System.out.println("server is full");
+            } catch (Exception e) {
+
+            }
+        }});
+        checkConnection.start();
+
+        while(true) {
+            System.out.print("");//IDK why but this won't work without this here
+            if ((clients.size() >= 3)){
+                System.out.println("enough players have joined you can start the game (type \"start\"):");
+                if (sc.next().equals("start")) {
+                    startGame();
+                    playing = true;
+
+                }
             }
         }
 
     }
 
+    //starts the game
+    public void startGame() {
+        System.out.println("game has started");
+       game.start();
+    }
+
     public void stop() throws IOException {
+        checkConnection.interrupt();
         serverSocket.close();
     }
+
 }
+

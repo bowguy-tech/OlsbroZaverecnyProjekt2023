@@ -4,10 +4,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 public class Deck {
     ArrayList<Card> cards = new ArrayList<Card>();
-
+    @Override
+    public String toString() {
+        String output = "";
+        for (Card c : cards) {
+            output += c.toString() + " ";
+        }
+        return output;
+    }
     public void generate() {
         for (Card.Suit s : Card.Suit.values()) {
-            for (int i = 1; i < 14; i++) {
+            for (int i = 2; i < 14; i++) {
                 cards.add(new Card(s,i));
             }
         }
@@ -15,7 +22,10 @@ public class Deck {
     public void shuffle() {
         Collections.shuffle(cards);
     }
-
+    public void sort() {
+        //sorts cards
+        Collections.sort(this.cards);
+    }
     public Card getCard(int i) {
         return cards.get(i);
     }
